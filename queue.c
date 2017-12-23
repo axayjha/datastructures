@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+/* newQueue: creates new queue and allocates memory */
 Queue *newQueue()
 {
 	Queue *q = (Queue *)malloc(sizeof(Queue));
@@ -43,6 +44,7 @@ Queue *newQueue()
 	return q; 
 }
 
+/* enqueue: inserts new item at the end */
 void enqueue(Queue *q, int val)
 {
 	if( q == NULL )		/* if memory for queue hasn't been allocated */
@@ -56,18 +58,21 @@ void enqueue(Queue *q, int val)
 	}		
 }
 
+/* dequeue: remove the item from the front */
 int dequeue(Queue *q)
 {
 	if( q == NULL || q->front == -1 ){	/* if queue isn't allocated or is empty */
 		fprintf(stderr, "QUEUE EMPTY: ERROR " );
 		return ERROR;
 	} else {	 /* if everything's fine */		
-		int val = q->data[q->front++];
-		if(q->front > q->rear) q->front = q->rear = -1;
+		int val = q->data[q->front];
+		if(q->front == q->rear) q->front = q->rear = -1;
+		else q->front++;
 		return val;
 	}
 }
 
+/* print: displays the whole queue */
 void print(Queue *q)
 {
 	if( q==NULL || q->rear==-1 ){	/* if queue isn't allocated any memory or is empty */
