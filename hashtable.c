@@ -1,3 +1,8 @@
+/*
+	A simple hash table implementation
+	Akshay Anand
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
