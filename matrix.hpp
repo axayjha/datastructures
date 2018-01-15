@@ -10,7 +10,6 @@
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -174,6 +173,7 @@ template <typename whatever>
 Size Matrix<whatever> :: get_dim() {
 	/**
 	    matrix.get_dim();
+	    
 	    @param none
 	    @return dimesion of matrix
 	    @return_type Size
@@ -317,7 +317,15 @@ void Matrix<whatever> :: print() {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: add(Matrix mat) {
-	assert(isEqual(mat.dimension, this->dimension));
+	/**
+		matrix1.add(matrix2);
+		Adds two matrices
+
+		@param mat: a second matrix to add
+		@return a new matrix containing the sum
+	*/
+
+	assert(isEqual(mat.dimension, this->dimension)); // making sure the orders are same
 	Matrix <whatever> sum(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
@@ -329,7 +337,14 @@ Matrix<whatever> Matrix<whatever> :: add(Matrix mat) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: add(whatever num) {
-	
+	/**
+		matrix1.add(num);
+		Adds a number to all elements in a matrix
+
+		@param num: the number to add
+		@return a new matrix containing the sum
+	*/
+
 	Matrix <whatever> sum(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
@@ -342,6 +357,14 @@ Matrix<whatever> Matrix<whatever> :: add(whatever num) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: subtract(Matrix mat) {
+	/**
+		matrix1.subtract(matrix2);
+		Subtracts one matrix from another
+
+		@param mat: a second matrix to subtract
+		@return a new matrix containing the difference
+	*/
+
 	assert(isEqual(mat.dimension, this->dimension));
 	Matrix<whatever> diff(this->dimension);
 
@@ -354,6 +377,13 @@ Matrix<whatever> Matrix<whatever> :: subtract(Matrix mat) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: subtract(whatever num) {
+	/**
+		matrix1.subtract(num);
+		Subtracts a number from all elements in a matrix
+
+		@param num: the number to subtract
+		@return a new matrix containing the difference
+	*/
 	
 	Matrix<whatever> diff(this->dimension);
 
@@ -367,6 +397,14 @@ Matrix<whatever> Matrix<whatever> :: subtract(whatever num) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: difference(Matrix mat) {
+	/**
+		matrix1.difference(mat);
+		Finds the absoulute difference between two matrices
+
+		@param mat: the matrix to subtract
+		@return a new matrix containing the absolute difference
+	*/
+
 	assert(isEqual(mat.dimension, this->dimension));
 	Matrix<whatever> absdiff(this->dimension);
 
@@ -379,7 +417,15 @@ Matrix<whatever> Matrix<whatever> :: difference(Matrix mat) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: difference(whatever num) {
-	
+	/**
+		matrix1.difference(num);
+		Subtracts a number from all elements in a matrix
+		and returns absolute value
+
+		@param num: the number to subtract
+		@return a new matrix containing the absolute difference
+	*/
+
 	Matrix<whatever> absdiff(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
@@ -391,6 +437,14 @@ Matrix<whatever> Matrix<whatever> :: difference(whatever num) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: multiply(Matrix mat) {
+	/**
+		matrix1.multiply(mat);
+		Multiplies two matrices
+
+		@param mat: the second matrix to multiply
+		@return a new matrix containing the product
+	*/
+
 	assert(this->dimension.column == mat.dimension.row);
 	Matrix <whatever> product(this->dimension.row, mat.dimension.column);
 
@@ -406,7 +460,14 @@ Matrix<whatever> Matrix<whatever> :: multiply(Matrix mat) {
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: multiply(whatever num) {
-	
+	/**
+		matrix1.multiply(num);
+		Multiplies a number to all elements of a matrix
+
+		@param num: the number to multiply
+		@return a new matrix containing the product
+	*/
+
 	Matrix<whatever> product(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
@@ -416,83 +477,130 @@ Matrix<whatever> Matrix<whatever> :: multiply(whatever num) {
 	return product;
 }
 
+/** Functions to overload operators for basic arithmetic operations */
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator+(Matrix mat) {
+	/**
+		Usage:
+			matrix3 = matrix1 + matrix2
+	*/
 	return this->add(mat);
 }
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator-(Matrix mat) {
+	/**
+		Usage:
+			matrix3 = matrix1 - matrix2
+	*/
 	return this->subtract(mat);
 }
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator*(Matrix mat) {
+	/**
+		Usage:
+			matrix3 = matrix1 * matrix2
+	*/
 	return this->multiply(mat);
 }
 
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator+(whatever num){
+	/**
+		Usage:
+			matrix2 = matrix1 + number
+	*/
 	return this->add(num);
 }
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator-(whatever num){
+	/**
+		Usage:
+			matrix2 = matrix1 - number
+	*/
 	return this->subtract(num);
 }
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: operator*(whatever num){
+	/**
+		Usage:
+			matrix2 = matrix1 * number
+	*/
 	return this->multiply(num);
 }
 
 template <typename whatever>
 Matrix<whatever>  operator+(const whatever num , const Matrix<whatever> &mat){
+	/**
+		Usage:
+			matrix2 = number + matrix1
+	*/
 	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
 	return mat1.add(num);
 }
 
 template <typename whatever>
 Matrix<whatever> operator-(const whatever num , const Matrix<whatever> &mat){
+	/**
+		Usage:
+			matrix2 = number - matrix1
+	*/
 	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
-	Matrix<whatever> res=  num + (-1)*mat1;
+	Matrix<whatever> res =  num + (-1)*mat1;
 	return res;
 }
 
 template <typename whatever>
 Matrix<whatever> operator*(const whatever num , const Matrix<whatever> &mat){
+	/**
+		Usage:
+			matrix2 = num * matrix1
+	*/
 	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
 	return mat1.multiply(num);
 }
+/*----------------END OF OPERATOR OVERLOADING FUNCTIONS---------------------**/
+
 
 template <typename whatever>
 Matrix<whatever> Matrix<whatever> :: add_padding(
 							uint8_t margin, 
 							whatever value) {
+	/**
+		matrix1.add_padding(margin, value);
+		adds padding to a matrix on all sides
 
-		uint64_t row    = this->dimension.row + (2 * margin),
-				 column = this->dimension.column + (2 * margin);
-		Matrix <whatever> paddedMat(row, column);	
+		@param margin: number of rows and columns of padding to add
+		@param value: what value to pad with
+		@return a new padded matrix
+	*/
 
-		for (int i = margin; i < row - margin; i++)
-			for (int j = margin; j < column - margin; j++)
-				paddedMat.set_item(i, j, this->get_item(i - margin, j - margin));
+	uint64_t row    = this->dimension.row + (2 * margin),
+			 column = this->dimension.column + (2 * margin);
+	Matrix <whatever> paddedMat(row, column);	
 
-		if (margin == 0) return paddedMat;	
+	for (int i = margin; i < row - margin; i++)
+		for (int j = margin; j < column - margin; j++)
+			paddedMat.set_item(i, j, this->get_item(i - margin, j - margin));
 
-		for (int i = 0; i < margin; i++)
-			for (int j = 0; j < column; j++){
-				paddedMat.set_item(i, j, value);	
-				paddedMat.set_item(row - i - 1, j, value);
-			}
+	if (margin == 0) return paddedMat;	
 
-		for (int i = 0; i < row; i++)
-			for (int j = 0; j < margin; j++){
-				paddedMat.set_item(i, j, value);	
-				paddedMat.set_item(i, column - j - 1, value);
-			}	
-		return paddedMat;
+	for (int i = 0; i < margin; i++)
+		for (int j = 0; j < column; j++){
+			paddedMat.set_item(i, j, value);	
+			paddedMat.set_item(row - i - 1, j, value);
+		}
+
+	for (int i = 0; i < row; i++)
+		for (int j = 0; j < margin; j++){
+			paddedMat.set_item(i, j, value);	
+			paddedMat.set_item(i, column - j - 1, value);
+		}	
+	return paddedMat;
 }
 
 
