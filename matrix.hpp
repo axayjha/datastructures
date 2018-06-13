@@ -4,37 +4,14 @@
 	@author Akshay
 	@version 0.1 29-Dec-17
 	@version 0.2 14-Jan-18
+	@version 0.3 13-Jun-18
 */
 
 
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <assert.h>
-#include <sstream>
-#include <list>
-#include <iterator>
-#include <numeric>
-#include <vector>
-#include <stdint.h>
-#include <exception>
-#include <iomanip>
-#include <cstdlib>
-#include <ctime>
-#include <limits.h>
-#include <cmath>
-#include <cstdio> 
-using namespace std;
-
-/* declaring constants */
-enum {
-	MAX_MAT_DIM = 0x0fff,
-	ERROR 		= 0xf001
-};
-
+#include "libraries.hpp"
 
 /* structure to store matrix dimensions */
 typedef struct{
@@ -51,29 +28,26 @@ Size Dimension(uint64_t r, uint64_t c) {
 
 /* isEqual: compares two dimensions */
 bool isEqual(Size d1, Size d2){
-	if (d1.row == d2.row && d1.column == d2.column)
-		return true;
-	return false;
+	return d1.row == d2.row && d1.column == d2.column;		
 }
 
 /* abs: returns absolute of a numeric value of any type */
-template <typename whatever> whatever abs(whatever number) {
-	if (number < 0)
-		return -1*number;
-	return number;
+template <typename T> T abs(T number) {
+	const T ret[2] = { number, -number };
+    return ret [number < 0];	
 }
 
 /** some required prototype declarations */
-template <typename whatever> class Matrix;
+template <typename T> class Matrix;
 
-template<typename whatever> Matrix<whatever> 
-operator+(const whatever num, const Matrix<whatever> &mat);
+template<typename T> Matrix<T> 
+operator+(const T num, const Matrix<T> &mat);
 
-template<typename whatever> Matrix<whatever> 
-operator-(const whatever num, const Matrix<whatever> &mat);
+template<typename T> Matrix<T> 
+operator-(const T num, const Matrix<T> &mat);
 
-template<typename whatever> Matrix<whatever> 
-operator*(const whatever num, const Matrix<whatever> &mat);
+template<typename T> Matrix<T> 
+operator*(const T num, const Matrix<T> &mat);
 
 /*------------------------------------ **/
 
@@ -82,68 +56,79 @@ operator*(const whatever num, const Matrix<whatever> &mat);
 	all  numeric type. So please show some decency 
 	and please use it only with numeric types
 */
-template <typename whatever>
+template <typename T>
 class Matrix {
 
-	vector < vector <whatever> >array;
+	vector < vector <T> >array;
 	Size dimension;
 	
 public:
 
-	Matrix();
-	Matrix(Size dim);
-	Matrix(uint64_t row, uint64_t column);
+	explicit Matrix() : dimension({0,0}) {}
+	explicit Matrix(Size dim);
+	explicit Matrix(uint64_t row, uint64_t column);
 	inline Size get_dim();
 	inline void set_dim(Size dim);
 	inline void set_dim(uint64_t row, uint64_t column);
-	inline void set_item(uint64_t row, uint64_t column, whatever value);
-	inline whatever get_item(uint64_t row, uint64_t column);
+	inline void set_item(uint64_t row, uint64_t column, T value);
+	inline T get_item(uint64_t row, uint64_t column);
 	inline void resize(uint64_t row, uint64_t column);	
-	void input(vector < vector <whatever> >array);
+	void input(vector < vector <T> >array);
 	void print();
 	Matrix transpose();
 	Matrix add(Matrix mat);
-	Matrix add(whatever num);	
+	Matrix add(T num);	
 	Matrix subtract(Matrix mat);
-	Matrix subtract(whatever num);
+	Matrix subtract(T num);
 	Matrix difference(Matrix mat);
-	Matrix difference(whatever num);
+	Matrix difference(T num);
 	Matrix multiply(Matrix mat);
-	Matrix multiply(whatever num);
+	Matrix multiply(T num);
 	Matrix operator+(Matrix mat);
 	Matrix operator-(Matrix mat);
 	Matrix operator*(Matrix mat);
-	Matrix operator+(whatever num);
-	Matrix operator-(whatever num);
-	Matrix operator*(whatever num);
-	friend Matrix (::operator+ <whatever>) (
-		const whatever num, const Matrix &mat);
-	friend Matrix (:: operator- <whatever>) (
-		const whatever num, const Matrix &mat);
-	friend Matrix (:: operator* <whatever>) (
-		const whatever num, const Matrix &mat);
-	Matrix add_padding(uint8_t margin, whatever value);
-	// add convolve
+	Matrix operator+(T num);
+	Matrix operator-(T num);
+	Matrix operator*(T num);
+	friend Matrix (::operator+ <T>) (
+		const T num, const Matrix &mat);
+	friend Matrix (:: operator- <T>) (
+		const T num, const Matrix &mat);
+	friend Matrix (:: operator* <T>) (
+		const T num, const Matrix &mat);
+	Matrix add_padding(uint8_t margin, T value);
+	void copy_to(Matrix &m);
+	void copy_from(Matrix m);
+	void f_copy_to(Matrix &m);
+	void f_copy_from(Matrix m);	
 	
 
+
+	class Proxy {
+    public:
+        Proxy(Matrix <T> &m, uint64_t index) : parent(m), i(index) { }
+
+        T operator[](uint64_t j) {
+        	if (i >= parent.get_dim().row || j>= parent.get_dim().column) {
+	    		fprintf(stderr, "Error in line %d in %s: Index out of bounds!\n", __LINE__, __FILE__);
+	    		return EBADR;
+	    	}            
+            return parent.get_item(i, j);
+        }
+    private:
+        uint64_t i;
+        Matrix <T> parent;
+    };
+
+    Proxy operator[](uint64_t index) {
+    	
+        return Proxy(*this, index);
+    }
 };
 
 
-template <typename whatever>
-Matrix<whatever> :: Matrix() {
-	/** 
-		Default constructor :
-			Matrix m;
-			Matrix *m = new Matrix();
-		Dimension = MAX_MAT_DIM X MAX_MAT_DIM  
-					(constant declared at the top)	
-	*/
-	this->array.resize(MAX_MAT_DIM, std::vector<whatever>(MAX_MAT_DIM, 0));
-}
-
-
-template <typename whatever>
-Matrix<whatever> :: Matrix(Size dim){ 
+template <typename T>
+Matrix<T> :: Matrix(Size dim){ 
 	/**
 		Constructor assigning dimensions:
 			Matrix m(dimension);
@@ -153,24 +138,22 @@ Matrix<whatever> :: Matrix(Size dim){
 			 = 			 {uint64_t, uint64_t}
 	*/
 	this->dimension = dim; 
-	this->array.resize(dim.row, std::vector<whatever>(dim.column, 0));
+	this->array.resize(dim.row, std::vector<T>(dim.column, 0));
 }
 
-
-template <typename whatever>
-Matrix<whatever> :: Matrix(uint64_t row, uint64_t column) { 
+template <typename T>
+Matrix<T> :: Matrix(uint64_t row, uint64_t column) { 
 	/**
 		Constructor assigning dimension explicitly:
 			Matrix m(row, column);
 			Matrix *m = new Matrix(row, column)
 	*/
 	this->dimension = Dimension(row, column);
-	this->array.resize(row, std::vector<whatever>(column, 0));
+	this->array.resize(row, std::vector<T>(column, 0));
 }
 
-
-template <typename whatever>
-Size Matrix<whatever> :: get_dim() {
+template <typename T>
+Size Matrix<T> :: get_dim() {
 	/**
 	    matrix.get_dim();
 	    
@@ -181,9 +164,8 @@ Size Matrix<whatever> :: get_dim() {
 	return this->dimension;
 }
 
-
-template <typename whatever>
-void Matrix<whatever> :: set_dim(Size dim) {
+template <typename T>
+void Matrix<T> :: set_dim(Size dim) {
 	/**
 	    matrix.set_dim(dimension);
 	    Sets dimension of a new matrix.
@@ -196,8 +178,8 @@ void Matrix<whatever> :: set_dim(Size dim) {
 	this->dimension = dim;
 }
 
-template <typename whatever>
-void Matrix<whatever> :: set_dim(uint64_t row, uint64_t column) {
+template <typename T>
+void Matrix<T> :: set_dim(uint64_t row, uint64_t column) {
 	/**
 	    matrix.set_dim(row_size, column_size);
 	    Sets dimension of a new matrix explicitly.
@@ -211,8 +193,8 @@ void Matrix<whatever> :: set_dim(uint64_t row, uint64_t column) {
 	this->dimension = Dimension(row, column);
 }
 
-template <typename whatever>
-void Matrix<whatever> :: set_item(uint64_t row, uint64_t column, whatever value) {
+template <typename T>
+void Matrix<T> :: set_item(uint64_t row, uint64_t column, T value) {
 	/**
 	    matrix.set_item(row_index, column_index, value);
 	    Changes value in matrix at a specific location	    
@@ -225,8 +207,8 @@ void Matrix<whatever> :: set_item(uint64_t row, uint64_t column, whatever value)
 	this->array[row][column] = value;
 }
 
-template <typename whatever>
-whatever Matrix<whatever> :: get_item(uint64_t row, uint64_t column){
+template <typename T>
+T Matrix<T> :: get_item(uint64_t row, uint64_t column){
 	/**
 	    matrix.get_item(row_index, column_index);
 	    Returns value from matrix from a specific location	    
@@ -238,8 +220,8 @@ whatever Matrix<whatever> :: get_item(uint64_t row, uint64_t column){
 	return this->array[row][column];
 }
 
-template <typename whatever>
-void Matrix<whatever> :: resize(uint64_t row, uint64_t column) {
+template <typename T>
+void Matrix<T> :: resize(uint64_t row, uint64_t column) {
 	/**
 	    matrix.resize(row_size, column_size);
 	    Resizes a matrix size, but clears all data. Use cautiously.	    
@@ -249,12 +231,11 @@ void Matrix<whatever> :: resize(uint64_t row, uint64_t column) {
 	    @return none    
 	*/
 	this->dimension = Dimension(row, column);
-	this->array.resize(row, std::vector<whatever>(column, (whatever)0));
+	this->array.resize(row, std::vector<T>(column, (T)0));
 }
 
-
-template <typename whatever>
-void Matrix<whatever> :: input(vector < vector <whatever> > array){
+template <typename T>
+void Matrix<T> :: input(vector < vector <T> > array){
 	/**
 	    matrix.input(array);
 	    Copies data from a 2d vector.	    
@@ -273,8 +254,8 @@ void Matrix<whatever> :: input(vector < vector <whatever> > array){
 			this->set_item(i, j, array[i][j]);
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: transpose() {	
+template <typename T>
+Matrix<T> Matrix<T> :: transpose() {	
 	/**
 		matrix.transpose();
 		Changes rows to columns and columns to rows
@@ -285,7 +266,7 @@ Matrix<whatever> Matrix<whatever> :: transpose() {
 	
 	uint64_t row    = this->dimension.row,
 			 column = this->dimension.column;
-	Matrix <whatever> mat(column, row);		 
+	Matrix <T> mat(column, row);		 
 
 	for (int i = 0; i < row; i++)
 		for (int j = 0; j < column; j++)
@@ -294,8 +275,8 @@ Matrix<whatever> Matrix<whatever> :: transpose() {
 	return mat;			 
 }
 
-template <typename whatever>
-void Matrix<whatever> :: print() {
+template <typename T>
+void Matrix<T> :: print() {
 	/**
 		matrix.print();
 		Prints the whole matrix, row by row.
@@ -315,8 +296,8 @@ void Matrix<whatever> :: print() {
 	cout << endl;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: add(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: add(Matrix mat) {
 	/**
 		matrix1.add(matrix2);
 		Adds two matrices
@@ -326,7 +307,7 @@ Matrix<whatever> Matrix<whatever> :: add(Matrix mat) {
 	*/
 
 	assert(isEqual(mat.dimension, this->dimension)); // making sure the orders are same
-	Matrix <whatever> sum(this->dimension);
+	Matrix <T> sum(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -335,8 +316,8 @@ Matrix<whatever> Matrix<whatever> :: add(Matrix mat) {
 	return sum;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: add(whatever num) {
+template <typename T>
+Matrix<T> Matrix<T> :: add(T num) {
 	/**
 		matrix1.add(num);
 		Adds a number to all elements in a matrix
@@ -345,7 +326,7 @@ Matrix<whatever> Matrix<whatever> :: add(whatever num) {
 		@return a new matrix containing the sum
 	*/
 
-	Matrix <whatever> sum(this->dimension);
+	Matrix <T> sum(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -355,8 +336,8 @@ Matrix<whatever> Matrix<whatever> :: add(whatever num) {
 }
 
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: subtract(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: subtract(Matrix mat) {
 	/**
 		matrix1.subtract(matrix2);
 		Subtracts one matrix from another
@@ -366,7 +347,7 @@ Matrix<whatever> Matrix<whatever> :: subtract(Matrix mat) {
 	*/
 
 	assert(isEqual(mat.dimension, this->dimension));
-	Matrix<whatever> diff(this->dimension);
+	Matrix<T> diff(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -375,8 +356,8 @@ Matrix<whatever> Matrix<whatever> :: subtract(Matrix mat) {
 	return diff;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: subtract(whatever num) {
+template <typename T>
+Matrix<T> Matrix<T> :: subtract(T num) {
 	/**
 		matrix1.subtract(num);
 		Subtracts a number from all elements in a matrix
@@ -385,7 +366,7 @@ Matrix<whatever> Matrix<whatever> :: subtract(whatever num) {
 		@return a new matrix containing the difference
 	*/
 	
-	Matrix<whatever> diff(this->dimension);
+	Matrix<T> diff(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -395,8 +376,8 @@ Matrix<whatever> Matrix<whatever> :: subtract(whatever num) {
 }
 
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: difference(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: difference(Matrix mat) {
 	/**
 		matrix1.difference(mat);
 		Finds the absoulute difference between two matrices
@@ -406,7 +387,7 @@ Matrix<whatever> Matrix<whatever> :: difference(Matrix mat) {
 	*/
 
 	assert(isEqual(mat.dimension, this->dimension));
-	Matrix<whatever> absdiff(this->dimension);
+	Matrix<T> absdiff(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -415,8 +396,8 @@ Matrix<whatever> Matrix<whatever> :: difference(Matrix mat) {
 	return absdiff;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: difference(whatever num) {
+template <typename T>
+Matrix<T> Matrix<T> :: difference(T num) {
 	/**
 		matrix1.difference(num);
 		Subtracts a number from all elements in a matrix
@@ -426,7 +407,7 @@ Matrix<whatever> Matrix<whatever> :: difference(whatever num) {
 		@return a new matrix containing the absolute difference
 	*/
 
-	Matrix<whatever> absdiff(this->dimension);
+	Matrix<T> absdiff(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -435,8 +416,8 @@ Matrix<whatever> Matrix<whatever> :: difference(whatever num) {
 	return absdiff;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: multiply(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: multiply(Matrix mat) {
 	/**
 		matrix1.multiply(mat);
 		Multiplies two matrices
@@ -446,11 +427,11 @@ Matrix<whatever> Matrix<whatever> :: multiply(Matrix mat) {
 	*/
 
 	assert(this->dimension.column == mat.dimension.row);
-	Matrix <whatever> product(this->dimension.row, mat.dimension.column);
+	Matrix <T> product(this->dimension.row, mat.dimension.column);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < mat.dimension.column; j++){
-			whatever prod = 0;
+			T prod = 0;
 			for (int k = 0; k < this->dimension.column; k++)
 				prod += (this->get_item(i, k) * mat.get_item(k, j));
 			product.set_item(i, j, prod);
@@ -458,8 +439,8 @@ Matrix<whatever> Matrix<whatever> :: multiply(Matrix mat) {
 	return product;
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: multiply(whatever num) {
+template <typename T>
+Matrix<T> Matrix<T> :: multiply(T num) {
 	/**
 		matrix1.multiply(num);
 		Multiplies a number to all elements of a matrix
@@ -468,7 +449,7 @@ Matrix<whatever> Matrix<whatever> :: multiply(whatever num) {
 		@return a new matrix containing the product
 	*/
 
-	Matrix<whatever> product(this->dimension);
+	Matrix<T> product(this->dimension);
 
 	for (int i = 0; i < this->dimension.row; i++)
 		for (int j = 0; j < this->dimension.column; j++)
@@ -478,8 +459,8 @@ Matrix<whatever> Matrix<whatever> :: multiply(whatever num) {
 }
 
 /** Functions to overload operators for basic arithmetic operations */
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator+(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: operator+(Matrix mat) {
 	/**
 		Usage:
 			matrix3 = matrix1 + matrix2
@@ -487,8 +468,8 @@ Matrix<whatever> Matrix<whatever> :: operator+(Matrix mat) {
 	return this->add(mat);
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator-(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: operator-(Matrix mat) {
 	/**
 		Usage:
 			matrix3 = matrix1 - matrix2
@@ -496,8 +477,8 @@ Matrix<whatever> Matrix<whatever> :: operator-(Matrix mat) {
 	return this->subtract(mat);
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator*(Matrix mat) {
+template <typename T>
+Matrix<T> Matrix<T> :: operator*(Matrix mat) {
 	/**
 		Usage:
 			matrix3 = matrix1 * matrix2
@@ -506,8 +487,8 @@ Matrix<whatever> Matrix<whatever> :: operator*(Matrix mat) {
 }
 
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator+(whatever num){
+template <typename T>
+Matrix<T> Matrix<T> :: operator+(T num){
 	/**
 		Usage:
 			matrix2 = matrix1 + number
@@ -515,8 +496,8 @@ Matrix<whatever> Matrix<whatever> :: operator+(whatever num){
 	return this->add(num);
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator-(whatever num){
+template <typename T>
+Matrix<T> Matrix<T> :: operator-(T num){
 	/**
 		Usage:
 			matrix2 = matrix1 - number
@@ -524,8 +505,8 @@ Matrix<whatever> Matrix<whatever> :: operator-(whatever num){
 	return this->subtract(num);
 }
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: operator*(whatever num){
+template <typename T>
+Matrix<T> Matrix<T> :: operator*(T num){
 	/**
 		Usage:
 			matrix2 = matrix1 * number
@@ -533,43 +514,43 @@ Matrix<whatever> Matrix<whatever> :: operator*(whatever num){
 	return this->multiply(num);
 }
 
-template <typename whatever>
-Matrix<whatever>  operator+(const whatever num , const Matrix<whatever> &mat){
+template <typename T>
+Matrix<T>  operator+(const T num , const Matrix<T> &mat){
 	/**
 		Usage:
 			matrix2 = number + matrix1
 	*/
-	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
+	Matrix<T> &mat1 = const_cast<Matrix <T> &>(mat);
 	return mat1.add(num);
 }
 
-template <typename whatever>
-Matrix<whatever> operator-(const whatever num , const Matrix<whatever> &mat){
+template <typename T>
+Matrix<T> operator-(const T num , const Matrix<T> &mat){
 	/**
 		Usage:
 			matrix2 = number - matrix1
 	*/
-	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
-	Matrix<whatever> res =  num + (-1)*mat1;
+	Matrix<T> &mat1 = const_cast<Matrix <T> &>(mat);
+	Matrix<T> res =  num + (-1)*mat1;
 	return res;
 }
 
-template <typename whatever>
-Matrix<whatever> operator*(const whatever num , const Matrix<whatever> &mat){
+template <typename T>
+Matrix<T> operator*(const T num , const Matrix<T> &mat){
 	/**
 		Usage:
 			matrix2 = num * matrix1
 	*/
-	Matrix<whatever> &mat1 = const_cast<Matrix <whatever> &>(mat);
+	Matrix<T> &mat1 = const_cast<Matrix <T> &>(mat);
 	return mat1.multiply(num);
 }
 /*----------------END OF OPERATOR OVERLOADING FUNCTIONS---------------------**/
 
 
-template <typename whatever>
-Matrix<whatever> Matrix<whatever> :: add_padding(
+template <typename T>
+Matrix<T> Matrix<T> :: add_padding(
 							uint8_t margin, 
-							whatever value) {
+							T value) {
 	/**
 		matrix1.add_padding(margin, value);
 		adds padding to a matrix on all sides
@@ -581,7 +562,7 @@ Matrix<whatever> Matrix<whatever> :: add_padding(
 
 	uint64_t row    = this->dimension.row + (2 * margin),
 			 column = this->dimension.column + (2 * margin);
-	Matrix <whatever> paddedMat(row, column);	
+	Matrix <T> paddedMat(row, column);	
 
 	for (int i = margin; i < row - margin; i++)
 		for (int j = margin; j < column - margin; j++)
@@ -603,5 +584,57 @@ Matrix<whatever> Matrix<whatever> :: add_padding(
 	return paddedMat;
 }
 
+template <typename T> 
+void Matrix <T> :: copy_from (Matrix m) {
 
+	if (not (isEqual(this->dimension, m.get_dim()))) {
+		fprintf(stderr, "Incompatible dimensions for copying\n");
+		return;
+	}
+
+	for (uint64_t i = 0; i < dimension.row; i++)
+		for (uint64_t j = 0; j < dimension.column; j++)
+			this->set_item(i, j, m.get_item(i, j));
+
+}
+
+template <typename T>
+void Matrix <T> :: copy_to (Matrix &m) {
+
+	if (not (isEqual(this->dimension, m.get_dim()))) {
+		fprintf(stderr, "Incompatible dimensions for copying\n");
+		return;
+	}
+
+	for (uint64_t i = 0; i < dimension.row; i++)
+		for (uint64_t j = 0; j < dimension.column; j++)
+			m.set_item(i, j, this->get_item(i, j));
+
+}
+
+template <typename T>
+void Matrix <T> :: f_copy_from (Matrix m)
+{
+	if (not (isEqual(this->dimension, m.get_dim()))) {
+		this->resize(m.get_dim().row, m.get_dim().column);
+	}
+
+	for (uint64_t i = 0; i < dimension.row; i++)
+		for (uint64_t j = 0; j < dimension.column; j++)
+			this->set_item(i, j, m.get_item(i, j));
+}
+
+
+template <typename T>
+void Matrix <T> :: f_copy_to (Matrix &m) {
+
+	if (not (isEqual(this->dimension, m.get_dim()))) {
+		m.resize(this->get_dim().row, this->get_dim().column);
+	}
+
+	for (uint64_t i = 0; i < dimension.row; i++)
+		for (uint64_t j = 0; j < dimension.column; j++)
+			m.set_item(i, j, this->get_item(i, j));
+
+}
 #endif
