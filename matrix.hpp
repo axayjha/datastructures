@@ -1,28 +1,40 @@
-/**
-	2-dimensional array [matrix] manipulation utilities
-
-	@author Akshay
-	@version 0.1 29-Dec-17
-	@version 0.2 14-Jan-18
-	@version 0.3 13-Jun-18
-*/
-
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <assert.h>
+#include <sstream>
+#include <list>
+#include <iterator>
+#include <numeric>
+#include <vector>
+#include <stdint.h>
+#include <exception>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <limits.h>
+#include <cmath>
+#include <cstdio> 
+#include <errno.h>
+using namespace std;
 
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 
-#include "libraries.hpp"
 
 /* structure to store matrix dimensions */
 typedef struct{
-	uint64_t row, 
-	         column;
+	uint64_t row; 			// height
+	uint64_t column;		// width
 }Size;
+
 
 /* Dimension: works like a constructor for the 
    Size structure */
 Size Dimension(uint64_t r, uint64_t c) {
-	Size dim = {r, c}; 
+	Size dim;
+	dim.row = r;
+	dim.column = c;
 	return dim;
 }
 
@@ -126,7 +138,6 @@ public:
     }
 };
 
-
 template <typename T>
 Matrix<T> :: Matrix(Size dim){ 
 	/**
@@ -137,7 +148,8 @@ Matrix<T> :: Matrix(Size dim){
 		Size = Structure {row, 		column} 
 			 = 			 {uint64_t, uint64_t}
 	*/
-	this->dimension = dim; 
+	this->dimension.row = dim.row;
+	this->dimension.column = dim.column; 
 	this->array.resize(dim.row, std::vector<T>(dim.column, 0));
 }
 
@@ -175,7 +187,8 @@ void Matrix<T> :: set_dim(Size dim) {
 	    @param dimesion: dimension of type Size
 	    @return none    
 	*/
-	this->dimension = dim;
+	this->dimension.row = dim.row;
+	this->dimension.column = dim.column;
 }
 
 template <typename T>
@@ -637,4 +650,5 @@ void Matrix <T> :: f_copy_to (Matrix &m) {
 			m.set_item(i, j, this->get_item(i, j));
 
 }
+
 #endif
